@@ -1,3 +1,9 @@
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+MPC.build/
+MPC.xcodeproj/
+cmake_install.cmake
 .vscode
 build
 tags
