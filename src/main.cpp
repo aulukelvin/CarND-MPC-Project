@@ -91,43 +91,98 @@ int main() {
           double py = j[1]["y"];
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
-
-          /*
-          * TODO: Calculate steering angle and throttle using MPC.
-          *
-          * Both are in between [-1, 1].
-          *
-          */
-          double steer_value;
-          double throttle_value;
-
+          
+          double delta = j[1]["steering_angle"];
+          double a = j[1]["throttle"];
+          
+          const double Lf = 2.67;
+          
+          // Sumulate control delay
+          double latency = 0.1;
+          px = px + v * cos(psi) * latency;
+          py = py + v * sin(psi) * latency;
+          
+          // delta from simulator is in the opposite direction
+          psi = psi - v / Lf * delta * latency;
+          v = v + a * latency;
+          
+          // Response json message
           json msgJson;
+          
+          // 1. Transform ptsx, ptsy from global coordinate space into car coordinate space.
+          // 2. Then prepare initial state x0 for MPC optimizer
+          //    x, y, psi should all become zero after the transformation.
+          
+          Eigen::VectorXd xvals(ptsx.size());
+          Eigen::VectorXd yvals(ptsy.size());
+          
+          for (size_t i = 0; i < ptsx.size(); i++) {
+            double x_shift = ptsx[i] - px;
+            double y_shift = ptsy[i] - py;
+            
+            xvals[i] = x_shift * cos(0-psi) - y_shift * sin(0-psi);
+            yvals[i] = x_shift * sin(0-psi) + y_shift * cos(0-psi);
+          }
+          
+          auto coeffs = polyfit(xvals, yvals, 3);
+          
+          double cte = polyeval(coeffs, 0);
+          // epsi was:
+          //   psi0 - atan(coeffs[1] + 2 * x0 * coeffs[1] + 3 * coeffs[2] * pow(x0, 2))
+          // where x0 = 0, psi0 = 0
+          double epsi = -atan(coeffs[1]);
+          
+          Eigen::VectorXd x0(6);
+          x0 << 0, 0, 0, v, cte, epsi;
+          
+          auto solution = mpc.Solve(x0, coeffs);
+          
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
-          // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
-          msgJson["steering_angle"] = steer_value;
+          // Otherwise the values will be in between [-deg2rad(25), deg2rad(25)] instead of [-1, 1].
+          
+          // double steer_value = solution[0] / (deg2rad(25)*Lf);
+          double steer_value = solution[0] / deg2rad(25);
+          double throttle_value = solution[1];
+          msgJson["steering_angle"] = -steer_value;
           msgJson["throttle"] = throttle_value;
-
-          //Display the MPC predicted trajectory 
-          vector<double> mpc_x_vals;
-          vector<double> mpc_y_vals;
-
-          //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
-          // the points in the simulator are connected by a Green line
-
-          msgJson["mpc_x"] = mpc_x_vals;
-          msgJson["mpc_y"] = mpc_y_vals;
-
+          
+          
           //Display the waypoints/reference line
           vector<double> next_x_vals;
           vector<double> next_y_vals;
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line
-
+          
+          int num_points = 25;
+          double ploy_inc = 2.5;
+          for (size_t i = 1; i < num_points; i++) {
+            next_x_vals.push_back(i*ploy_inc);
+            next_y_vals.push_back(polyeval(coeffs, i*ploy_inc));
+          }
+          
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;
-
-
+          
+          
+          //Display the MPC predicted trajectory
+          vector<double> mpc_x_vals;
+          vector<double> mpc_y_vals;
+          
+          //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
+          // the points in the simulator are connected by a Green line
+          
+          double predict_x = v * latency;
+          double predict_y = 0;
+          for (size_t i = 2; i < solution.size(); i+=2) {
+            mpc_x_vals.push_back(solution[i] + predict_x);
+            mpc_y_vals.push_back(solution[i+1] + predict_y);
+          }
+          
+          msgJson["mpc_x"] = mpc_x_vals;
+          msgJson["mpc_y"] = mpc_y_vals;
+          
+          
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
           std::cout << msg << std::endl;
           // Latency
