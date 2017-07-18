@@ -92,18 +92,18 @@ int main() {
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
           
-          double delta = j[1]["steering_angle"];
+          double angle = j[1]["steering_angle"];
           double a = j[1]["throttle"];
           
           const double Lf = 2.67;
           
-          // Sumulate control delay
+          // control delay
           double latency = 0.1;
           px = px + v * cos(psi) * latency;
           py = py + v * sin(psi) * latency;
           
-          // delta from simulator is in the opposite direction
-          psi = psi - v / Lf * delta * latency;
+          // steering angle from simulator is in the opposite direction
+          psi = psi - v / Lf * angle * latency;
           v = v + a * latency;
           
           // Response json message
@@ -117,11 +117,11 @@ int main() {
           Eigen::VectorXd yvals(ptsy.size());
           
           for (size_t i = 0; i < ptsx.size(); i++) {
-            double x_shift = ptsx[i] - px;
-            double y_shift = ptsy[i] - py;
+            double x_car = ptsx[i] - px;
+            double y_car = ptsy[i] - py;
             
-            xvals[i] = x_shift * cos(0-psi) - y_shift * sin(0-psi);
-            yvals[i] = x_shift * sin(0-psi) + y_shift * cos(0-psi);
+            xvals[i] = x_car * cos(0-psi) - y_car * sin(0-psi);
+            yvals[i] = x_car * sin(0-psi) + y_car * cos(0-psi);
           }
           
           auto coeffs = polyfit(xvals, yvals, 3);
