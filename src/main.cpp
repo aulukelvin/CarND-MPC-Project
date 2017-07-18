@@ -89,7 +89,7 @@ int main() {
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
     string sdata = string(data).substr(0, length);
-    cout << sdata << endl;
+//    cout << sdata << endl;
     if (sdata.size() > 2 && sdata[0] == '4' && sdata[1] == '2') {
       string s = hasData(sdata);
       if (s != "") {
@@ -110,7 +110,7 @@ int main() {
           const double Lf = 2.67;
           
           // control delay
-          double latency = 0.2;
+          double latency = 0.1;
           px = px + v * cos(psi) * latency;
           py = py + v * sin(psi) * latency;
           
@@ -198,7 +198,7 @@ int main() {
           
           
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
-          std::cout << msg << std::endl;
+//          std::cout << msg << std::endl;
           // Latency
           // The purpose is to mimic real driving conditions where
           // the car does actuate the commands instantly.

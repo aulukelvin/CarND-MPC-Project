@@ -5,8 +5,8 @@
 
 using CppAD::AD;
 
-size_t N = 10;
-double dt = 0.25;
+size_t N = 45;
+double dt = 0.05;
 
 // This value assumes the model presented in the classroom is used.
 //
@@ -31,13 +31,13 @@ size_t epsi_start = cte_start + N;
 size_t delta_start = epsi_start + N;
 size_t a_start = delta_start + N - 1;
 
-size_t cf_cte = 1;
-size_t cf_epsi = 1;
-size_t cf_v = 1;
-size_t cf_delta = 10;
-size_t cf_a = 1;
-size_t cf_dd = 10;
-size_t cf_da = 1;
+double cf_cte = 100.0;
+double cf_epsi = 100.0;
+double cf_v = 1.0;
+double cf_delta = 100000.0;
+double cf_a = 50.0;
+double cf_dd = 10000.0;
+double cf_da = 10.0;
 
 class FG_eval {
 public:
