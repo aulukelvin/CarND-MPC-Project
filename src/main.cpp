@@ -13,13 +13,23 @@
 using json = nlohmann::json;
 
 // For converting back and forth between radians and degrees.
-constexpr double pi() { return M_PI; }
-double deg2rad(double x) { return x * pi() / 180; }
-double rad2deg(double x) { return x * 180 / pi(); }
+
+constexpr double pi() {
+  return M_PI;
+}
+
+double deg2rad(double x) {
+  return x * pi() / 180;
+}
+
+double rad2deg(double x) {
+  return x * 180 / pi();
+}
 
 // Checks if the SocketIO event has JSON data.
 // If there is data the JSON object in string format will be returned,
 // else the empty string "" will be returned.
+
 string hasData(string s) {
   auto found_null = s.find("null");
   auto b1 = s.find_first_of("[");
@@ -33,6 +43,7 @@ string hasData(string s) {
 }
 
 // Evaluate a polynomial.
+
 double polyeval(Eigen::VectorXd coeffs, double x) {
   double result = 0.0;
   for (int i = 0; i < coeffs.size(); i++) {
@@ -44,22 +55,23 @@ double polyeval(Eigen::VectorXd coeffs, double x) {
 // Fit a polynomial.
 // Adapted from
 // https://github.com/JuliaMath/Polynomials.jl/blob/master/src/Polynomials.jl#L676-L716
+
 Eigen::VectorXd polyfit(Eigen::VectorXd xvals, Eigen::VectorXd yvals,
                         int order) {
   assert(xvals.size() == yvals.size());
   assert(order >= 1 && order <= xvals.size() - 1);
   Eigen::MatrixXd A(xvals.size(), order + 1);
-
+  
   for (int i = 0; i < xvals.size(); i++) {
     A(i, 0) = 1.0;
   }
-
+  
   for (int j = 0; j < xvals.size(); j++) {
     for (int i = 0; i < order; i++) {
       A(j, i + 1) = A(j, i) * xvals(j);
     }
   }
-
+  
   auto Q = A.householderQr();
   auto result = Q.solve(yvals);
   return result;
@@ -67,10 +79,10 @@ Eigen::VectorXd polyfit(Eigen::VectorXd xvals, Eigen::VectorXd yvals,
 
 int main() {
   uWS::Hub h;
-
+  
   // MPC is initialized here!
   MPC mpc;
-
+  
   h.onMessage([&mpc](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
@@ -92,18 +104,18 @@ int main() {
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
           
-          double angle = j[1]["steering_angle"];
+          double delta = j[1]["steering_angle"];
           double a = j[1]["throttle"];
           
           const double Lf = 2.67;
           
           // control delay
-          double latency = 0.1;
+          double latency = 0.2;
           px = px + v * cos(psi) * latency;
           py = py + v * sin(psi) * latency;
           
           // steering angle from simulator is in the opposite direction
-          psi = psi - v / Lf * angle * latency;
+          psi = psi - v / Lf * delta * latency;
           v = v + a * latency;
           
           // Response json message
@@ -116,16 +128,18 @@ int main() {
           Eigen::VectorXd xvals(ptsx.size());
           Eigen::VectorXd yvals(ptsy.size());
           
+          double x_car, y_car;
+          
           for (size_t i = 0; i < ptsx.size(); i++) {
-            double x_car = ptsx[i] - px;
-            double y_car = ptsy[i] - py;
+            x_car = ptsx[i] - px;
+            y_car = ptsy[i] - py;
             
-            xvals[i] = x_car * cos(0-psi) - y_car * sin(0-psi);
-            yvals[i] = x_car * sin(0-psi) + y_car * cos(0-psi);
+            xvals[i] = x_car * cos(0 - psi) - y_car * sin(0 - psi);
+            yvals[i] = x_car * sin(0 - psi) + y_car * cos(0 - psi);
           }
           
           auto coeffs = polyfit(xvals, yvals, 3);
-          
+          //cout << "coeffs: " << coeffs << endl;
           double cte = polyeval(coeffs, 0);
           // epsi was:
           //   psi0 - atan(coeffs[1] + 2 * x0 * coeffs[1] + 3 * coeffs[2] * pow(x0, 2))
@@ -150,15 +164,15 @@ int main() {
           //Display the waypoints/reference line
           vector<double> next_x_vals;
           vector<double> next_y_vals;
-
+          
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line
           
           int num_points = 25;
           double ploy_inc = 2.5;
           for (size_t i = 1; i < num_points; i++) {
-            next_x_vals.push_back(i*ploy_inc);
-            next_y_vals.push_back(polyeval(coeffs, i*ploy_inc));
+            next_x_vals.push_back(i * ploy_inc);
+            next_y_vals.push_back(polyeval(coeffs, i * ploy_inc));
           }
           
           msgJson["next_x"] = next_x_vals;
@@ -174,9 +188,9 @@ int main() {
           
           double predict_x = v * latency;
           double predict_y = 0;
-          for (size_t i = 2; i < solution.size(); i+=2) {
+          for (size_t i = 2; i < solution.size(); i += 2) {
             mpc_x_vals.push_back(solution[i] + predict_x);
-            mpc_y_vals.push_back(solution[i+1] + predict_y);
+            mpc_y_vals.push_back(solution[i + 1] + predict_y);
           }
           
           msgJson["mpc_x"] = mpc_x_vals;
@@ -204,7 +218,7 @@ int main() {
       }
     }
   });
-
+  
   // We don't need this since we're not using HTTP but if it's removed the
   // program
   // doesn't compile :-(
@@ -218,17 +232,17 @@ int main() {
       res->end(nullptr, 0);
     }
   });
-
+  
   h.onConnection([&h](uWS::WebSocket<uWS::SERVER> ws, uWS::HttpRequest req) {
     std::cout << "Connected!!!" << std::endl;
   });
-
+  
   h.onDisconnection([&h](uWS::WebSocket<uWS::SERVER> ws, int code,
                          char *message, size_t length) {
     ws.close();
     std::cout << "Disconnected" << std::endl;
   });
-
+  
   int port = 4567;
   if (h.listen(port)) {
     std::cout << "Listening to port " << port << std::endl;
