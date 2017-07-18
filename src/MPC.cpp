@@ -6,7 +6,7 @@
 using CppAD::AD;
 
 size_t N = 10;
-double dt = 0.05;
+double dt = 0.25;
 
 // This value assumes the model presented in the classroom is used.
 //
@@ -31,6 +31,14 @@ size_t epsi_start = cte_start + N;
 size_t delta_start = epsi_start + N;
 size_t a_start = delta_start + N - 1;
 
+size_t cf_cte = 1;
+size_t cf_epsi = 1;
+size_t cf_v = 1;
+size_t cf_delta = 10;
+size_t cf_a = 1;
+size_t cf_dd = 10;
+size_t cf_da = 1;
+
 class FG_eval {
 public:
   // Fitted polynomial coefficients
@@ -53,21 +61,21 @@ public:
     
     // Cost for reference state
     for (int i = 0; i < N; i++) {
-      fg[0] += (100 + i * 10) * CppAD::pow(vars[cte_start + i], 2);
-      fg[0] += (100 + i * 10) * CppAD::pow(vars[epsi_start + i], 2);
-      fg[0] += CppAD::pow(vars[v_start + i] - ref_v, 2);
+      fg[0] += cf_cte * CppAD::pow(vars[cte_start + i], 2);
+      fg[0] += cf_epsi * CppAD::pow(vars[epsi_start + i], 2);
+      fg[0] += cf_v * CppAD::pow(vars[v_start + i] - ref_v, 2);
     }
     
     // Minimize actuator use
     for (int i = 0; i < N - 1; i++) {
-      fg[0] += 100000 * CppAD::pow(vars[delta_start + i], 2);
-      fg[0] += 50 * CppAD::pow(vars[a_start + i], 2);
+      fg[0] += cf_delta * CppAD::pow(vars[delta_start + i], 2);
+      fg[0] += cf_a * CppAD::pow(vars[a_start + i], 2);
     }
     
     // Minimize actuator change
     for (int i = 0; i < N - 2; i++) {
-      fg[0] += 10000 * CppAD::pow(vars[delta_start + i + 1] - vars[delta_start + i], 2);
-      fg[0] += 10 * CppAD::pow(vars[a_start + i + 1] - vars[a_start + i], 2);
+      fg[0] += cf_dd * CppAD::pow(vars[delta_start + i + 1] - vars[delta_start + i], 2);
+      fg[0] += cf_da * CppAD::pow(vars[a_start + i + 1] - vars[a_start + i], 2);
     }
     
     //
@@ -233,7 +241,7 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   auto cost = solution.obj_value;
   std::cout << "cost:" << cost << std::endl;
   
-  // TODO: Return the first actuator values. The variables can be accessed with
+  // Return the first actuator values. The variables can be accessed with
   // `solution.x[i]`.
   //
   // {...} is shorthand for creating a vector, so auto x1 = {1.0,2.0}
