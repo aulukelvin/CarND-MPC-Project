@@ -5,7 +5,7 @@
 
 using CppAD::AD;
 
-size_t N = 45;
+size_t N = 15;
 double dt = 0.05;
 
 // This value assumes the model presented in the classroom is used.
@@ -20,7 +20,7 @@ double dt = 0.05;
 // This is the length from front to CoG that has a similar radius.
 const double Lf = 2.67;
 
-double ref_v = 60;
+double ref_v = 105;
 
 size_t x_start = 0;
 size_t y_start = x_start + N;
@@ -31,13 +31,13 @@ size_t epsi_start = cte_start + N;
 size_t delta_start = epsi_start + N;
 size_t a_start = delta_start + N - 1;
 
-double cf_cte = 100.0;
-double cf_epsi = 100.0;
+double cf_cte = 1.0;
+double cf_epsi = 5.0;//
 double cf_v = 1.0;
-double cf_delta = 100000.0;
-double cf_a = 50.0;
-double cf_dd = 10000.0;
-double cf_da = 10.0;
+double cf_delta = 10000.0;
+double cf_a = 1.0;
+double cf_dd = 100.0;
+double cf_da = 1.0;
 
 class FG_eval {
 public:
