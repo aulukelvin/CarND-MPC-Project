@@ -1,8 +1,10 @@
 # CarND-Controls-MPC Reflection
 Self-Driving Car Engineer Nanodegree Program
+[//]: # (Image References)
 [image1]: ./mpc.png "mpc.png"
 [image2]: ./latency.png "latency.png"
 [image3]: ./no-latency.png "no-latency.png"
+
 We have learnt three ways to control the car driving so far: the first way is known as 'Behaviour Cloning', which requires human driver to demonstrate how to drive in all scenarios and then we use a deep learning model to learn from the demonstration. The problem of this method is not so satisfying because firstly the model requires quite a lot training data to learn. If the road condition is non-trivial then generating training data will be very difficult. The model is learning from the training data so if there's any human error then the model will repeat the error without hesitating. And the generated model can only work for the trained scenarios as well. If the testing scenario is out of the training ones then the model will have no clue how to deal with it.
 
 Then we learned the second controlling method -- so called "PID controller", which is very mature and widely used controlling method. Simply speaking, it set up a reference line in the driving direction, measure the error of the car position against the reference line and minimize the error. This method proved to be very effective. With this method, my car can drive at nearly 70mph, while using Behaviour Cloning the car can only drive at 35mph approximately. But the PID controller is still not good enough because the PID controller can only react to existing errors. They don't have the ability to predict or prevent the error from happening. As the consequence, when the car drives very fast, the PID controller will fail to keep the car on the track.
