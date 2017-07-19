@@ -31,7 +31,7 @@ Here’s my cost function and the coefficients:
     double cf_dd = 100.0;
     double cf_da = 1.0;
 
-	…
+	...
 	    	    
     for (int i = 0; i < N; i++) {
       fg[0] += cf_cte * CppAD::pow(vars[cte_start + i], 2);
@@ -41,7 +41,8 @@ Here’s my cost function and the coefficients:
 
     // Minimize actuator use
     for (int i = 0; i < N - 1; i++) {
-    fg[0] += cf_delta * CppAD::pow(vars[delta_start + i], 2);    fg[0] += cf_a * CppAD::pow(vars[a_start + i], 2);
+      fg[0] += cf_delta * CppAD::pow(vars[delta_start + i], 2);    
+      fg[0] += cf_a * CppAD::pow(vars[a_start + i], 2);
     }
 
     // Minimize actuator change
